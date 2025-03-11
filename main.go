@@ -3,19 +3,17 @@ package main
 import (
 	"archive/zip"
 	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
-	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rs/zerolog"
@@ -68,6 +66,7 @@ func zipDir(ctx context.Context, dir string, zipPath string, logger *zerolog.Log
 		logger.Error().Err(err).Str("path", zipPath).Msg("Creating zip file")
 		return
 	}
+	defer zipFile.Close()
 
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
@@ -122,13 +121,6 @@ func zipDir(ctx context.Context, dir string, zipPath string, logger *zerolog.Log
 	}
 }
 
-// s3Config is the access configuration for an S3 or S3-compatible bucket.
-type s3Config struct {
-	Endpoint string
-	Bucket   string
-	Options  *minio.Options
-}
-
 // uploadZip uploads the zip file at the provided path to the provided S3 or S3-compatible bucket.
 func uploadZip(ctx context.Context, zipPath string, cfg *s3Config, logger *zerolog.Logger) {
 	tracer := otel.Tracer("archiver")
@@ -176,7 +168,7 @@ func archive(ctx context.Context, dir string, filename string, cfg *s3Config, lo
 	zipDir(ctx, dir, zipPath, logger)
 
 	// Upload the zip file to the S3 bucket.
-	// uploadZip(ctx, zipPath, cfg, logger)
+	uploadZip(ctx, zipPath, cfg, logger)
 }
 
 // handleTermination processes context cancellation signals or interrupt signals from the OS.
@@ -188,6 +180,7 @@ func handleTermination(ctx context.Context, cancel context.CancelFunc, wg *sync.
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, signals...)
 
+	// Wait for the context to be cancelled or an interrupt signal.
 	for {
 		select {
 		case <-ctx.Done():
@@ -199,82 +192,6 @@ func handleTermination(ctx context.Context, cancel context.CancelFunc, wg *sync.
 	}
 }
 
-// Config is the configuration struct for the archiver.
-type Config struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	Bucket          string
-	SourceDir       string
-	Zipfile         string
-	LogLevel        string
-}
-
-// validate ensures that the configuration is valid.
-func (c *Config) validate() error {
-	var errs error
-
-	if c.Endpoint == "" {
-		errs = errors.Join(errs, fmt.Errorf("s3/s3-compatible endpoint required"))
-	}
-
-	if c.AccessKeyID == "" {
-		errs = errors.Join(errs, fmt.Errorf("access key ID required"))
-	}
-
-	if c.SecretAccessKey == "" {
-		errs = errors.Join(errs, fmt.Errorf("secret access key required"))
-	}
-
-	if c.Bucket == "" {
-		errs = errors.Join(errs, fmt.Errorf("bucket required"))
-	}
-
-	if c.SourceDir == "" {
-		errs = errors.Join(errs, fmt.Errorf("source directory required"))
-	}
-
-	if c.Zipfile == "" {
-		errs = errors.Join(errs, fmt.Errorf("zip file required"))
-	}
-
-	if c.LogLevel == "" {
-		errs = errors.Join(errs, fmt.Errorf("log level required"))
-	}
-
-	return errs
-}
-
-// readFromEnv reads the configuration from environment variables.
-func (c *Config) readFromEnv() error {
-	env, err := godotenv.Read()
-	if err != nil {
-		return err
-	}
-
-	c.Endpoint = env["endpoint"]
-	c.AccessKeyID = env["accesskeyid"]
-	c.SecretAccessKey = env["secretaccesskey"]
-	c.Bucket = env["bucket"]
-	c.Zipfile = env["zipfile"]
-	c.SourceDir = env["sourcedir"]
-	c.LogLevel = env["loglevel"]
-
-	return nil
-}
-
-// readFromFlags reads the configuration from command line flags.
-func (c *Config) readFromFlags() {
-	flag.StringVar(&c.LogLevel, "loglevel", "", "the log level")
-	flag.StringVar(&c.Endpoint, "endpoint", "", "the S3 endpoint")
-	flag.StringVar(&c.AccessKeyID, "accesskeyid", "", "the S3 access key ID")
-	flag.StringVar(&c.SecretAccessKey, "secretaccesskey", "", "the S3 secret access key")
-	flag.StringVar(&c.Bucket, "bucket", "", "the S3 bucket")
-	flag.StringVar(&c.Zipfile, "zipfile", "", "the zip filename")
-	flag.StringVar(&c.SourceDir, "dir", "", "the source directory to archive")
-	flag.Parse()
-}
-
 func main() {
 	// Create the logger.
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -282,23 +199,11 @@ func main() {
 
 	logger := log.With().Caller().Logger()
 
-	var cfg Config
-
-	err := cfg.readFromEnv()
+	cfg := Config{}
+	err := loadConfig(&cfg, "")
 	if err != nil {
-		logger.Error().Err(err).Msg("Reading configuration from environment")
+		logger.Error().Msgf("Loading configuration: %s", strings.ReplaceAll(err.Error(), "\n", ". "))
 		return
-	}
-
-	// If the endpoint is not set by the environment, parse the command line arguments.
-	err = cfg.validate()
-	if err != nil {
-		cfg.readFromFlags()
-		err = cfg.validate()
-		if err != nil {
-			logger.Error().Err(err).Msg("Validating configuration")
-			return
-		}
 	}
 
 	switch cfg.LogLevel {
