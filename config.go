@@ -40,7 +40,6 @@ type Config struct {
 	SecretAccessKey string
 	Bucket          string
 	SourceDir       string
-	Zipfile         string
 	LogLevel        string
 }
 
@@ -66,10 +65,6 @@ func (c *Config) validate() error {
 
 	if c.SourceDir == "" {
 		errs = errors.Join(errs, fmt.Errorf("source directory required"))
-	}
-
-	if c.Zipfile == "" {
-		errs = errors.Join(errs, fmt.Errorf("zip file required"))
 	}
 
 	if c.LogLevel == "" {
@@ -99,7 +94,6 @@ func loadConfig(cfg *Config, path string) error {
 	registerFlag("secretaccesskey", &cfg.SecretAccessKey, "S3 secret access key")
 	registerFlag("bucket", &cfg.Bucket, "S3 or S3-compatible bucket name")
 	registerFlag("sourcedir", &cfg.SourceDir, "Source directory to archive")
-	registerFlag("zipfile", &cfg.Zipfile, "Zip filename")
 	registerFlag("loglevel", &cfg.LogLevel, "Log level (debug, info, warn, error, fatal)")
 
 	// Parse command-line flags.

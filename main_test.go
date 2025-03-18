@@ -43,11 +43,14 @@ func TestZipDir(t *testing.T) {
 
 	// Zip the directory.
 	logger := zerolog.Nop()
-	ctx := context.Background()
-	zipDir(ctx, dir, zipPath, &logger)
+	zipDir(dir, zipPath, &logger)
 
 	// Assert the zip file exists.
 	_, err = os.Stat(zipPath)
+	assert.NoError(t, err)
+
+	// Romove zip file.
+	err = os.Remove(zipPath)
 	assert.NoError(t, err)
 }
 
@@ -67,7 +70,7 @@ func TestUploadZip(t *testing.T) {
 	// Zip the directory.
 	logger := log.With().Caller().Logger()
 	ctx := context.Background()
-	zipDir(ctx, dir, zipPath, &logger)
+	zipDir(dir, zipPath, &logger)
 
 	// Assert the zip file exists.
 	_, err = os.Stat(zipPath)
@@ -90,4 +93,8 @@ func TestUploadZip(t *testing.T) {
 
 	// Upload the zip file.
 	uploadZip(ctx, zipPath, cfg, &logger)
+
+	// Romove zip file.
+	err = os.Remove(zipPath)
+	assert.NoError(t, err)
 }

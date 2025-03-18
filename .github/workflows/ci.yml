@@ -1,4 +1,4 @@
-name: Create and publish OCI images (multi architecture)
+name: Create and publish docker image
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
             org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-            org.opencontainers.image.description=OCI image for ${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=Docker image for ${{ env.IMAGE_NAME }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.version=${{ github.ref }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
@@ -47,4 +47,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=oci

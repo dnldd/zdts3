@@ -19,7 +19,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
-	"go.opentelemetry.io/otel"
 )
 
 // purgeDir removes files in the provided directory that are older than the provided timestamp filter.
@@ -55,11 +54,7 @@ func purgeDir(dir string, filter uint64, logger *zerolog.Logger) {
 }
 
 // zipDir zips contents of the provided directory into a zip file at the provided path.
-func zipDir(ctx context.Context, dir string, zipPath string, logger *zerolog.Logger) {
-	tracer := otel.Tracer("archiver")
-	ctx, span := tracer.Start(ctx, "zipDir")
-	defer span.End()
-
+func zipDir(dir string, zipPath string, logger *zerolog.Logger) {
 	// Create the destination zip file.
 	zipFile, err := os.Create(zipPath)
 	if err != nil {
@@ -123,10 +118,6 @@ func zipDir(ctx context.Context, dir string, zipPath string, logger *zerolog.Log
 
 // uploadZip uploads the zip file at the provided path to the provided S3 or S3-compatible bucket.
 func uploadZip(ctx context.Context, zipPath string, cfg *s3Config, logger *zerolog.Logger) {
-	tracer := otel.Tracer("archiver")
-	ctx, span := tracer.Start(ctx, "uploadZip")
-	defer span.End()
-
 	// Upload the zip file to an S3 or S3-compatible bucket.
 	mnc, err := minio.New(cfg.Endpoint, cfg.Options)
 	if err != nil {
@@ -155,7 +146,7 @@ func uploadZip(ctx context.Context, zipPath string, cfg *s3Config, logger *zerol
 
 // archive archives the contents of the provided directory by purging old files and zipping the
 // recent files in the directory.
-func archive(ctx context.Context, dir string, filename string, cfg *s3Config, logger *zerolog.Logger) {
+func archive(ctx context.Context, dir string, cfg *s3Config, logger *zerolog.Logger) {
 	// The purge filter is set to 10 minutes before midnight of the previous day.
 	now := time.Now()
 	filter := time.Date(now.Year(), now.Month(), now.Day(), 23, 50, 0, 0, now.Location()).AddDate(0, 0, -1)
@@ -164,10 +155,10 @@ func archive(ctx context.Context, dir string, filename string, cfg *s3Config, lo
 	purgeDir(dir, uint64(filter.UnixMilli()), logger)
 
 	// Zip the directory.
-	zipPath := filepath.Join(dir, fmt.Sprintf("%s-%d.zip", filename, uint64(filter.UnixMilli())))
-	zipDir(ctx, dir, zipPath, logger)
+	zipPath := filepath.Join(dir, fmt.Sprintf("dump-%s.zip", now.Format("20060102150405")))
+	zipDir(dir, zipPath, logger)
 
-	// Upload the zip file to the S3 bucket.
+	// Upload the zip file to the S3/S3-compatible bucket.
 	uploadZip(ctx, zipPath, cfg, logger)
 }
 
@@ -245,7 +236,6 @@ func main() {
 		gocron.NewTask(
 			archive,
 			cfg.SourceDir,
-			cfg.Zipfile,
 			s3Cfg,
 			&logger,
 		),
