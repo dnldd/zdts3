@@ -33,7 +33,7 @@ type s3Config struct {
 	Options  *minio.Options
 }
 
-// Config is the configuration struct for the archiver.
+// Config is the configuration struct for the service.
 type Config struct {
 	Endpoint        string
 	AccessKeyID     string

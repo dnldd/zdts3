@@ -247,7 +247,9 @@ func main() {
 
 	s.Start()
 
-	logger.Info().Msg("Archiver started")
+	logger.Info().Msgf("zdts3 started.")
+	logger.Info().Msgf("periodically and incrementally backing up %s dir to %s bucket.",
+		cfg.SourceDir, cfg.Bucket)
 
 	wg.Add(1)
 	go handleTermination(ctx, cancel, &wg)

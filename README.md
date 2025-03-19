@@ -1,49 +1,36 @@
-# Archiver
+# zdts3
 
-Archiver is a tool for archiving recent files in a directory by:
-1. Purging old files from the source directory.
-2. Compressing remaining files into a zip archive.
-3. Uploading the zip archive to an S3 or S3-compatible bucket.
+zdts3 is a tool for archiving recent files in a directory by purging old files from the source directory, compressing remaining files into a zip archive and uploading the zip archive to an S3 or S3-compatible bucket. This tool is intended to be used in backing up periodic database dumps for recovery purposes.
 
-## Installation
-
-To install Archiver, clone the repository and build the binary:
-
-```sh
-git clone <repository-url>
-cd archiver
-go build .
-```
+build with `go build .` for a binary or `docker build .` for a docker image.
 
 ## Usage
 
 ### Configuration
 
-Archiver can be configured using environment variables or command-line flags.
+zdts3 can be configured using environment variables or command-line flags.
 
 #### Environment Variables
 
-- `endpoint`: S3 or S3-compatible endpoint
-- `accesskeyid`: S3 access key ID
-- `secretaccesskey`: S3 secret access key
-- `bucket`: S3 bucket name
-- `sourcedir`: Source directory to archive
-- `zipfile`: Zip filename
-- `loglevel`: Log level (debug, info, warn, error, fatal)
+- `endpoint`: S3 or S3-compatible endpoint.
+- `accesskeyid`: S3 access key ID.
+- `secretaccesskey`: S3 secret access key.
+- `bucket`: S3 bucket name.
+- `sourcedir`: Source directory to archive.
+- `loglevel`: Log level (debug, info, warn, error, fatal).
 
 #### Command-Line Flags
 
-- `-endpoint`: S3 or S3-compatible endpoint
-- `-accesskeyid`: S3 access key ID
-- `-secretaccesskey`: S3 secret access key
-- `-bucket`: S3 bucket name
-- `-dir`: Source directory to archive
-- `-zipfile`: Zip filename
-- `-loglevel`: Log level (debug, info, warn, error, fatal)
+- `-endpoint`: S3 or S3-compatible endpoint.
+- `-accesskeyid`: S3 access key ID.
+- `-secretaccesskey`: S3 secret access key.
+- `-bucket`: S3 bucket name.
+- `-dir`: Source directory to archive.
+- `-loglevel`: Log level (debug, info, warn, error, fatal).
 
 ### Docker Compose
 
-To run the archiver using Docker Compose, create a `.env` file with the following content:
+To run the zdts3 using Docker Compose, create a `.env` file with the following parameters:
 
 ```env
 endpoint=<your-s3-endpoint>
@@ -61,8 +48,8 @@ Create a `docker-compose.yml` file with the following content:
 version: '3.8'
 
 services:
-  archiver:
-    image: archiver:latest
+  zdts3:
+    image: <zdts3-docker-image>
     restart: always
     command:
       [
@@ -71,15 +58,8 @@ services:
         "-accesskeyid=${accesskeyid}",
         "-secretaccesskey=${secretaccesskey}",
         "-bucket=${bucket}",
-        "-filename=${filename}",
         "-dir=${dir}",
       ]
 ```
 
-To start the Archiver service, run:
-
-```sh
-docker-compose up
-```
-
-This tool was inspired by [docker-spaces-backup](https://github.com/thakkaryash94/docker-spaces-backup)
+To start the zdts3 service, run `docker-compose up`

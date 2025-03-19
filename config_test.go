@@ -34,7 +34,6 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "test-secretaccesskey", cfg.SecretAccessKey)
 	assert.Equal(t, "test-bucket", cfg.Bucket)
 	assert.Equal(t, "test-sourcedir", cfg.SourceDir)
-	assert.Equal(t, "test-zipfile", cfg.Zipfile)
 	assert.Equal(t, "debug", cfg.LogLevel)
 
 	// Reset the environment variables set.
@@ -56,7 +55,6 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "test-secretaccesskey", cfg.SecretAccessKey)
 	assert.Equal(t, "test-bucket", cfg.Bucket)
 	assert.Equal(t, "test-sourcedir", cfg.SourceDir)
-	assert.Equal(t, "test-zipfile", cfg.Zipfile)
 	assert.Equal(t, "debug", cfg.LogLevel)
 }
 
@@ -74,7 +72,6 @@ func TestValidateConfig(t *testing.T) {
 				SecretAccessKey: "test-secretaccesskey",
 				Bucket:          "test-bucket",
 				SourceDir:       "test-sourcedir",
-				Zipfile:         "test-zipfile",
 				LogLevel:        "debug",
 			},
 			hasError: false,
@@ -86,7 +83,6 @@ func TestValidateConfig(t *testing.T) {
 				SecretAccessKey: "test-secretaccesskey",
 				Bucket:          "test-bucket",
 				SourceDir:       "test-sourcedir",
-				Zipfile:         "test-zipfile",
 				LogLevel:        "debug",
 			},
 			hasError: true,
@@ -98,7 +94,6 @@ func TestValidateConfig(t *testing.T) {
 				SecretAccessKey: "test-secretaccesskey",
 				Bucket:          "test-bucket",
 				SourceDir:       "test-sourcedir",
-				Zipfile:         "test-zipfile",
 				LogLevel:        "debug",
 			},
 			hasError: true,
@@ -110,7 +105,6 @@ func TestValidateConfig(t *testing.T) {
 				AccessKeyID: "test-accesskeyid",
 				Bucket:      "test-bucket",
 				SourceDir:   "test-sourcedir",
-				Zipfile:     "test-zipfile",
 				LogLevel:    "debug",
 			},
 			hasError: true,
@@ -122,7 +116,6 @@ func TestValidateConfig(t *testing.T) {
 				AccessKeyID:     "test-accesskeyid",
 				SecretAccessKey: "test-secretaccesskey",
 				SourceDir:       "test-sourcedir",
-				Zipfile:         "test-zipfile",
 				LogLevel:        "debug",
 			},
 			hasError: true,
@@ -134,19 +127,6 @@ func TestValidateConfig(t *testing.T) {
 				AccessKeyID:     "test-accesskeyid",
 				SecretAccessKey: "test-secretaccesskey",
 				Bucket:          "test-bucket",
-				Zipfile:         "test-zipfile",
-				LogLevel:        "debug",
-			},
-			hasError: true,
-		},
-		{
-			name: "missing zip file",
-			config: Config{
-				Endpoint:        "test-endpoint",
-				AccessKeyID:     "test-accesskeyid",
-				SecretAccessKey: "test-secretaccesskey",
-				Bucket:          "test-bucket",
-				SourceDir:       "test-sourcedir",
 				LogLevel:        "debug",
 			},
 			hasError: true,
@@ -159,7 +139,6 @@ func TestValidateConfig(t *testing.T) {
 				SecretAccessKey: "test-secretaccesskey",
 				Bucket:          "test-bucket",
 				SourceDir:       "test-sourcedir",
-				Zipfile:         "test-zipfile",
 			},
 			hasError: true,
 		},

@@ -1,4 +1,4 @@
-module github.com/dnldd/archiver
+module github.com/dnldd/zdts3
 
 go 1.23
 

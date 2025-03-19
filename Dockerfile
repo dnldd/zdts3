@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-## run with: docker build .
+## build with: docker build .
 ## tag with: docker tag image-sha image-name:tag
 
 ## Builder stage
@@ -14,7 +14,7 @@ RUN go mod download
 
 # Copy the rest of the source code
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /archiver
+RUN CGO_ENABLED=0 GOOS=linux go build -o /zdts3
 
 ## Final stage
 FROM scratch
@@ -23,7 +23,7 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # Copy the binary
-COPY --from=builder /archiver /archiver
+COPY --from=builder /zdts3 /zdts3
 
-# Declare the archiver binary as the entrypoint
-ENTRYPOINT ["/archiver"]
+# Declare the zdts3 binary as the entrypoint
+ENTRYPOINT ["/zdts3"]
