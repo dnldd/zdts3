@@ -76,17 +76,20 @@ func TestUploadZip(t *testing.T) {
 	_, err = os.Stat(zipPath)
 	assert.NoError(t, err)
 
-	// Load environment variables from .env file
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Loading environment variables")
+	// Load the env file if it exists.
+	_, err = os.Stat(".env")
+	if err == nil {
+		err = godotenv.Load()
+		if err != nil {
+			log.Fatal().Err(err).Msg("Loading environment variables")
+		}
 	}
 
 	cfg := &s3Config{
-		Bucket:   os.Getenv("bucket"),
-		Endpoint: os.Getenv("endpoint"),
+		Bucket:   os.Getenv("BUCKET"),
+		Endpoint: os.Getenv("ENDPOINT"),
 		Options: &minio.Options{
-			Creds:  credentials.NewStaticV4(os.Getenv("accesskeyid"), os.Getenv("secretaccesskey"), ""),
+			Creds:  credentials.NewStaticV4(os.Getenv("ACCESSKEYID"), os.Getenv("SECRETACCESSKEY"), ""),
 			Secure: true,
 		},
 	}

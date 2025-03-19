@@ -80,6 +80,7 @@ func loadConfig(cfg *Config, path string) error {
 		path = ".env"
 	}
 
+	// Check if the expected .env file exists before loading it.
 	_, err := os.Stat(path)
 	if err == nil {
 		err := godotenv.Load(path)
